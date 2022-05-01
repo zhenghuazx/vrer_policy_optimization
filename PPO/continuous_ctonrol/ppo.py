@@ -14,11 +14,11 @@ from simulator.fermentation import mechanism, fermentation_env2
 huber_loss = keras.losses.Huber()
 
 # problem
-problem = 'fermentation'
+problem = 'fermentation-fixing-substrate'
 # Configuration parameters for the whole setup
-seed = 47
+seed = 15
 gamma = 0.99  # Discount factor for past rewards
-max_steps_per_episode = 300
+max_steps_per_episode = 36
 process_model = mechanism()
 env = fermentation_env2(process_model)
 upper_bound = 0.02  # upper bounad of feeding
@@ -38,13 +38,12 @@ num_actions = env.num_action
 
 # Hyperparameters of the PPO algorithm
 epochs = 30
-lr = 0.0001
 
 clip_ratio = 0.2
 policy_learning_rate = 1e-3
 value_function_learning_rate = 5e-3
-train_policy_iterations = 5
-train_value_iterations = 5
+train_policy_iterations = 1
+train_value_iterations = 1
 lam = 0.98
 target_kl = 0.01
 hidden_sizes = 64
@@ -52,10 +51,10 @@ hidden_sizes = 64
 # Initialize the actor and the critic as keras models
 
 actor, _actor = create_actor_model(num_inputs, num_actions, hidden_sizes, lower_bound, upper_bound,
-                                   log_stdev_low=-10, log_stdev_high=5)
+                                   log_stdev_low=-1, log_stdev_high=2)
 
 critic, _critic = create_critic_model(num_inputs, num_actions, hidden_sizes, lower_bound, upper_bound,
-                                      log_stdev_low=-10, log_stdev_high=5)
+                                      log_stdev_low=-1, log_stdev_high=2)
 
 # Initialize the policy and the value function optimizers
 policy_optimizer = keras.optimizers.Adam(learning_rate=policy_learning_rate)

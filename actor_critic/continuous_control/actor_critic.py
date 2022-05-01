@@ -18,10 +18,10 @@ Critic: This takes as input the state of our environment and returns an estimate
 In our implementation, they share the initial layer.
 '''
 # problem
-problem = 'fermentation'
+problem = 'fermentation-fixing-substrate-2'
 # problem = 'MountainCar-v0'
 # Configuration parameters for the whole setup
-seed = 43
+seed = 49
 gamma = 0.99  # Discount factor for past rewards
 max_steps_per_episode = 36
 # env = gym.make("CartPole-v0")  # Create the environment
@@ -35,7 +35,7 @@ tf.random.set_seed(seed)
 np.random.seed(seed)
 tf.experimental.numpy.random.seed(seed)
 eps = np.finfo(np.float32).eps.item()  # Smallest number such that 1.0 + eps != 1.0
-lr = 0.0001
+lr = 0.001
 
 ''' Define the actor and critic '''
 num_inputs = env.num_observation
@@ -239,7 +239,7 @@ if __name__ == '__main__':
         if episode_count >= num_episodes:  # Condition to consider the task solved
             # print("Solved at episode {}!".format(episode_count))
             break
-
+    #
     np.save(path + '/mlr_gradient_norm', mlr_gradient_norm)
     np.save(path + '/reuse_full', reuse_full)
     np.save(path + "/score_history", score_history)

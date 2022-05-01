@@ -14,9 +14,9 @@ from simulator.fermentation import mechanism, fermentation_env2
 huber_loss = keras.losses.Huber()
 
 # problem
-problem = 'fermentation'
+problem = 'fermentation-fixing-substrate'
 # Configuration parameters for the whole setup
-seed = 104
+seed = 100
 gamma = 0.99  # Discount factor for past rewards
 max_steps_per_episode = 300
 process_model = mechanism()
@@ -38,11 +38,10 @@ num_actions = env.num_action
 
 # Hyperparameters of the PPO algorithm
 epochs = 30
-lr = 0.0001
 
 clip_ratio = 0.2
-policy_learning_rate = 1e-3
-value_function_learning_rate = 5e-3
+policy_learning_rate = 1e-7
+value_function_learning_rate = 5e-7
 train_policy_iterations = 5
 train_value_iterations = 5
 lam = 0.98

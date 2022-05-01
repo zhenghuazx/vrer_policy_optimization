@@ -18,10 +18,10 @@ Critic: This takes as input the state of our environment and returns an estimate
 In our implementation, they share the initial layer.
 '''
 # problem
-problem = 'fermentation'
+problem = 'fermentation-fixing-substrate'
 # problem = 'MountainCar-v0'
 # Configuration parameters for the whole setup
-seed = 47
+seed = 50
 gamma = 0.99  # Discount factor for past rewards
 max_steps_per_episode = 36
 # env = gym.make("CartPole-v0")  # Create the environment
@@ -35,7 +35,7 @@ tf.random.set_seed(seed)
 np.random.seed(seed)
 tf.experimental.numpy.random.seed(seed)
 eps = np.finfo(np.float32).eps.item()  # Smallest number such that 1.0 + eps != 1.0
-lr = 0.0001
+lr = 0.001
 
 ''' Define the actor and critic '''
 num_inputs = env.num_observation
@@ -50,7 +50,7 @@ optimizer = keras.optimizers.Adam(learning_rate=lr)
 
 num_epoch = 1
 batch_size = 1024
-num_episodes = 300
+num_episodes = 36
 c = 1.5
 running_rewards_full = []
 path = "./result/{}/actor_critic_simple/c{}/seed-{}-lr-{}-c-{}".format(problem, c, seed, lr, c)

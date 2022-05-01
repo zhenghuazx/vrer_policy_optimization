@@ -6,9 +6,19 @@ class fermentation_env2:
         if initial_state is None:
             initial_state = [0.05, 0, 0, 30, 5, 0.7]
         self.done = False
-        self.initial_state = initial_state
-        self.state = initial_state + [0]
         self.obj = obj
+        self.initial_state = initial_state
+        self.obj.update_coefficients(self.initial_state[0],
+                                     self.initial_state[3],
+                                     self.initial_state[4],
+                                     98,
+                                     self.initial_state[1],
+                                     self.initial_state[2],
+                                     0,
+                                     self.initial_state[5])
+        self.state = initial_state + [0] + [0, 0, self.obj.glucose_consumption(self.initial_state[0],
+                                                                               self.initial_state[3], 0,
+                                                                               self.initial_state[5])]
         self.glucose_consumed = 0
         self.glucose_added = 0  # self.initial_state[3]
         self.b = -0.13363 * 1000   # cost per g/L
@@ -18,7 +28,18 @@ class fermentation_env2:
 
     def reset(self):
         self.done = False
-        self.state = self.initial_state + [0]
+        # self.state = self.initial_state + [0]
+        self.obj.update_coefficients(self.initial_state[0],
+                                     self.initial_state[3],
+                                     self.initial_state[4],
+                                     98,
+                                     self.initial_state[1],
+                                     self.initial_state[2],
+                                     0,
+                                     self.initial_state[5])
+        self.state = self.initial_state + [0] + [0, 0, self.obj.glucose_consumption(self.initial_state[0],
+                                                                                    self.initial_state[3], 0,
+                                                                                    self.initial_state[5])]
         self.glucose_consumed = 0
         self.glucose_added = 0  # self.initial_state[3]
         return self.state
@@ -34,14 +55,17 @@ class fermentation_env2:
         return total_reward
 
     def step(self, action):
+
         next_state = self.obj.predict(self.state[0], self.state[1], self.state[2], self.state[3], self.state[4],
-                                      self.state[5], action[0], self.state[-1] * 4) + [self.state[-1] + 1]
+                                      self.state[5], action[0], self.state[-4] * 4) + [self.state[-4] + 1]
         self.glucose_added += action[0] * self.obj.delta_t
         self.done = True if self.obj.harvest_time / self.obj.delta_t + 1 == next_state[-1] else False
-        reward = self.b * action[0] + self.c * (next_state[1] - self.state[1])
+        # reward = self.b * action[0] + self.c * (next_state[1] - self.state[1])
+        reward = -(self.state[3] - 20) ** 2
+        _next_state = next_state + [self.obj.dX_f, self.obj.dC, self.obj.dS]
+        self.state = _next_state
 
-        self.state = next_state
-        return next_state, reward, self.done, None
+        return _next_state, reward, self.done, None
 
 
 class mechanism:
@@ -92,28 +116,28 @@ class mechanism:
         self.D = (self.F_B + F_S) / V
 
     def lipid_free_cell_growth(self, X_f, V):
-        dX_f = self.dt * (self.mu * X_f - (self.D - self.V_evap / V) * X_f)
-        return dX_f + X_f
+        self.dX_f = self.dt * (self.mu * X_f - (self.D - self.V_evap / V) * X_f)
+        return self.dX_f + X_f
 
     def citrate_accumulation(self, X_f, C, V):
-        dC = self.dt * (self.q_C * X_f - (self.D - self.V_evap / V) * C)
-        return dC + C
+        self.dC = self.dt * (self.q_C * X_f - (self.D - self.V_evap / V) * C)
+        return self.dC + C
 
     def lipid_accumulation(self, X_f, L, V):
-        dL = self.dt * ((self.alpha_L * self.mu + self.beta_L) * X_f - (self.D - self.V_evap / V) * L)
-        return dL + L
+        self.dL = self.dt * ((self.alpha_L * self.mu + self.beta_L) * X_f - (self.D - self.V_evap / V) * L)
+        return self.dL + L
 
     def glucose_consumption(self, X_f, S, F_S, V):
-        dS = - self.dt * (self.q_S * X_f - F_S / V * self.S_F + (self.D - self.V_evap / V) * S)
-        return dS + S
+        self.dS = - self.dt * (self.q_S * X_f - F_S / V * self.S_F + (self.D - self.V_evap / V) * S)
+        return self.dS + S
 
     def nitrogen_consumption(self, X_f, N, V):
-        dN = - self.dt * (1 / self.Y_xn * self.mu * X_f + (self.D - self.V_evap / V) * N)
-        return max(dN + N, 0)
+        self.dN = - self.dt * (1 / self.Y_xn * self.mu * X_f + (self.D - self.V_evap / V) * N)
+        return max(self.dN + N, 0)
 
     def volume_change(self, F_S, V):
-        dV = self.dt * (self.F_B + F_S - self.V_evap)
-        return dV + V
+        self.dV = self.dt * (self.F_B + F_S - self.V_evap)
+        return self.dV + V
 
     def one_step_predict(self, X_f, C, L, S, N, V, F_S, O):
         next_X_f = X_f
